@@ -1,12 +1,16 @@
 use nih_plug::prelude::*;
 use std::sync::Arc;
 
+mod ringbuffer;
+use ringbuffer::RingBuffer;
+
 // This is a shortened version of the gain example with most comments removed, check out
 // https://github.com/robbert-vdh/nih-plug/blob/master/plugins/examples/gain/src/lib.rs to get
 // started
 
 struct SheepyDelay {
     params: Arc<SheepyDelayParams>,
+    ring_buffer: RingBuffer<f32>,
 }
 
 #[derive(Params)]
@@ -23,6 +27,7 @@ impl Default for SheepyDelay {
     fn default() -> Self {
         Self {
             params: Arc::new(SheepyDelayParams::default()),
+            ring_buffer: RingBuffer::new(44100),
         }
     }
 }
@@ -113,6 +118,7 @@ impl Plugin for SheepyDelay {
     fn reset(&mut self) {
         // Reset buffers and envelopes here. This can be called from the audio thread and may not
         // allocate. You can remove this function if you do not need it.
+        self.ring_buffer.clear();
     }
 
     fn process(
